@@ -29,7 +29,7 @@ async def main():
     # Initialize Zep client
     zep = AsyncZep(api_key=os.getenv("ZEP_API_KEY"), base_url="https://api.getzep.com/api/v2")
 
-    # Process each user/session
+    # Process each user
     num_users = 10
     max_session_count = 35
 
