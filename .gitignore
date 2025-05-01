@@ -171,4 +171,4 @@ cython_debug/
 .pypirc
 
 # Data files
-kg_architecture_agent_memory/data
+kg_architecture_agent_memory/locomo_eval/data
