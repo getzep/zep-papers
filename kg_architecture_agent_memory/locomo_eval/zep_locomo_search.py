@@ -20,17 +20,6 @@ If a fact mentions something happening a week ago, then the datetime will be the
 of when the fact was stated.
 Timestamps in memories represent the actual time the event occurred, not the time the event was mentioned in a message.
     
-    Clarification:
-    When interpreting memories, use the timestamp to determine when the described event happened, not when someone talked about the event.
-    
-    Example:
-    
-    Memory: (2023-03-15T16:33:00Z) I went to the vet yesterday.
-    Question: What day did I go to the vet?
-    Correct Answer: March 15, 2023
-    Explanation:
-    Even though the phrase says "yesterday," the timestamp shows the event was recorded as happening on March 15th. Therefore, the actual vet visit happened on that date, regardless of the word "yesterday" in the text.
-
 <FACTS>
 {facts}
 </FACTS>
@@ -82,7 +71,7 @@ async def main():
             context = compose_search_context(edges, nodes)
             duration_ms = (time() - start) * 1000
 
-            zep_search_results[group_id].append({'duration_ms': duration_ms})
+            zep_search_results[group_id].append({'context': context, 'duration_ms': duration_ms})
 
     os.makedirs("data", exist_ok=True)
 

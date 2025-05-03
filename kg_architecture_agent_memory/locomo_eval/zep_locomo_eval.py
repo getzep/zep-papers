@@ -49,7 +49,7 @@ async def locomo_grader(llm_client, question: str, gold_answer: str, response: s
     """
 
     response = await llm_client.beta.chat.completions.parse(
-        model='gpt-4.1-mini',
+        model='gpt-4o-mini',
         messages=[{"role": "system", "content": system_prompt},
                   {"role": "user", "content": ACCURACY_PROMPT}],
         response_format=Grade,
@@ -85,6 +85,8 @@ async def main():
             question = response.get('question')
             zep_answer = response.get('answer')
             gold_answer = response.get('golden_answer')
+            if gold_answer is None:
+                continue
 
             task = locomo_grader(oai_client, question, gold_answer, zep_answer)
             tasks.append((question, zep_answer, gold_answer, task))
@@ -104,7 +106,7 @@ async def main():
 
     os.makedirs("data", exist_ok=True)
 
-    print('SCORE: ', score / 1986)
+    print('SCORE: ', score / 1540)
 
     with open("data/zep_locomo_grades.json", "w") as f:
         json.dump(dict(zep_grades), f, indent=2)

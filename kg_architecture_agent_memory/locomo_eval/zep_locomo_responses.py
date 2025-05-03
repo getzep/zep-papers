@@ -60,7 +60,7 @@ async def locomo_response(llm_client, context: str, question: str) -> str:
     """
 
     response = await llm_client.chat.completions.create(
-                model='gpt-4.1-mini',
+                model='gpt-4o-mini',
                 messages=[{"role": "system", "content": system_prompt},
                         {"role": "user", "content": prompt}],
                 temperature=0,
@@ -73,6 +73,8 @@ async def process_qa(qa, search_result, oai_client):
     start = time()
     query = qa.get('question')
     gold_answer = qa.get('answer') or qa.get('adversarial_answer')
+    if gold_answer is None:
+        return
 
     zep_answer = await locomo_response(oai_client, search_result.get('context'), query)
 
