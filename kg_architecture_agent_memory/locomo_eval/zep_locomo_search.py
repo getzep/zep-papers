@@ -15,8 +15,22 @@ import asyncio
 TEMPLATE = """
 FACTS and ENTITIES represent relevant context to the current conversation.
 
-# These are the most relevant facts and their valid date ranges. If the fact is about an event, the event takes place during this time.
-# format: FACT (Date range: from - to)
+# These are the most relevant facts for the conversation along with the datetime of the event that the fact refers to.
+If a fact mentions something happening a week ago, then the datetime will be the date time of last week and not the datetime
+of when the fact was stated.
+Timestamps in memories represent the actual time the event occurred, not the time the event was mentioned in a message.
+    
+    Clarification:
+    When interpreting memories, use the timestamp to determine when the described event happened, not when someone talked about the event.
+    
+    Example:
+    
+    Memory: (2023-03-15T16:33:00Z) I went to the vet yesterday.
+    Question: What day did I go to the vet?
+    Correct Answer: March 15, 2023
+    Explanation:
+    Even though the phrase says "yesterday," the timestamp shows the event was recorded as happening on March 15th. Therefore, the actual vet visit happened on that date, regardless of the word "yesterday" in the text.
+
 <FACTS>
 {facts}
 </FACTS>
@@ -28,13 +42,8 @@ FACTS and ENTITIES represent relevant context to the current conversation.
 </ENTITIES>
 """
 
-def format_edge_date_range(edge: EntityEdge) -> str:
-    # return f"{datetime(edge.valid_at).strftime('%Y-%m-%d %H:%M:%S') if edge.valid_at else 'date unknown'} - {(edge.invalid_at.strftime('%Y-%m-%d %H:%M:%S') if edge.invalid_at else 'present')}"
-    return f"{edge.valid_at if edge.valid_at else 'date unknown'} - {(edge.invalid_at if edge.invalid_at else 'present')}"
-
-
 def compose_search_context(edges: list[EntityEdge], nodes: list[EntityNode]) -> str:
-    facts = [f'  - {edge.fact} ({format_edge_date_range(edge)})' for edge in edges]
+    facts = [f'  - {edge.fact} (event_time: {edge.valid_at})' for edge in edges]
     entities = [f'  - {node.name}: {node.summary}' for node in nodes]
     return TEMPLATE.format(facts='\n'.join(facts), entities='\n'.join(entities))
 
@@ -43,27 +52,29 @@ async def main():
     # Load environment variables
     load_dotenv()
 
-    # Initialize Zep and OpenAI clients
+    # Initialize Zep client
     zep = AsyncZep(api_key=os.getenv("ZEP_API_KEY"), base_url="https://api.getzep.com/api/v2")
-    oai_client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-    locomo_df = pd.read_json('data/locomo.json')
+    # Download JSON data
+    url = "https://raw.githubusercontent.com/snap-research/locomo/refs/heads/main/data/locomo10.json"
+    response = requests.get(url)
+    locomo_df = pd.read_json(url)
 
     # Get context for each question
     num_users = 10
 
     zep_search_results = defaultdict(list)
-    for user_idx in range(num_users):
-        qa_set = locomo_df['qa'].iloc[user_idx]
-        user_id = f"locomo_experiment_user_{user_idx}"
+    for group_idx in range(num_users):
+        qa_set = locomo_df['qa'].iloc[group_idx]
+        group_id = f"locomo_experiment_user_{group_idx}"
 
         for qa in qa_set:
             start = time()
             query = qa.get('question')
 
             search_results = await asyncio.gather(
-                zep.graph.search(query=query, user_id=user_id, scope='nodes', reranker='rrf', limit=20),
-                zep.graph.search(query=query, user_id=user_id, scope='edges', reranker='cross_encoder', limit=20))
+                zep.graph.search(query=query, group_id=group_id, scope='nodes', reranker='rrf', limit=20),
+                zep.graph.search(query=query, group_id=group_id, scope='edges', reranker='cross_encoder', limit=20))
 
             nodes = search_results[0].nodes
             edges = search_results[1].edges
@@ -71,7 +82,7 @@ async def main():
             context = compose_search_context(edges, nodes)
             duration_ms = (time() - start) * 1000
 
-            zep_search_results[user_id].append({'context': context, 'duration_ms': duration_ms})
+            zep_search_results[group_id].append({'context': context, 'duration_ms': duration_ms})
 
     os.makedirs("data", exist_ok=True)
 
