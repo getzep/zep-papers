@@ -82,7 +82,7 @@ async def main():
             context = compose_search_context(edges, nodes)
             duration_ms = (time() - start) * 1000
 
-            zep_search_results[group_id].append({'context': context, 'duration_ms': duration_ms})
+            zep_search_results[group_id].append({'duration_ms': duration_ms})
 
     os.makedirs("data", exist_ok=True)
 
