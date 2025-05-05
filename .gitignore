@@ -169,3 +169,6 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# Data files
+kg_architecture_agent_memory/locomo_eval/data
