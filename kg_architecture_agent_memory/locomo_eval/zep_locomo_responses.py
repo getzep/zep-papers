@@ -72,9 +72,7 @@ async def locomo_response(llm_client, context: str, question: str) -> str:
 async def process_qa(qa, search_result, oai_client):
     start = time()
     query = qa.get('question')
-    gold_answer = qa.get('answer') or qa.get('adversarial_answer')
-    if gold_answer is None:
-        return
+    gold_answer = qa.get('answer')
 
     zep_answer = await locomo_response(oai_client, search_result.get('context'), query)
 
