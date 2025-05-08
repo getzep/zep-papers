@@ -60,6 +60,8 @@ async def main():
         for qa in qa_set:
             start = time()
             query = qa.get('question')
+            if qa.get('category') == 5:
+                continue
 
             search_results = await asyncio.gather(
                 zep.graph.search(query=query, group_id=group_id, scope='nodes', reranker='rrf', limit=20),
