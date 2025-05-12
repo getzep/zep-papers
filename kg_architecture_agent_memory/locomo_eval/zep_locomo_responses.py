@@ -72,9 +72,7 @@ async def locomo_response(llm_client, context: str, question: str) -> str:
 async def process_qa(qa, search_result, oai_client):
     start = time()
     query = qa.get('question')
-    gold_answer = qa.get('answer') or qa.get('adversarial_answer')
-    if gold_answer is None:
-        return
+    gold_answer = qa.get('answer')
 
     zep_answer = await locomo_response(oai_client, search_result.get('context'), query)
 
@@ -102,12 +100,14 @@ async def main():
     zep_responses = {}
     for group_idx in range(num_users):
         qa_set = locomo_df['qa'].iloc[group_idx]
+        qa_set_filtered = [qa for qa in qa_set if qa.get('category') != 5 ]
+
         group_id = f"locomo_experiment_user_{group_idx}"
         search_results = zep_locomo_search_results.get(group_id)
 
         tasks = [
             process_qa(qa, search_result, oai_client)
-            for qa, search_result in zip(qa_set, search_results, strict=True)
+            for qa, search_result in zip(qa_set_filtered, search_results, strict=True)
         ]
 
         responses = await asyncio.gather(*tasks)
