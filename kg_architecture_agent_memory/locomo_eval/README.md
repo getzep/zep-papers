@@ -6,16 +6,16 @@ Overall:
 
 Single-Hop:
     
-    74.11%
+    79.79%
 
 Multi-Hop:
 
-    66.04%
+    74.11%
 
 Open Domain:
 
-    67.71%
+    66.04%
 
 Temporal:
 
-    79.79%
+    67.71% 
