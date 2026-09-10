@@ -41,8 +41,16 @@ async def main():
     # Load environment variables
     load_dotenv()
 
-    # Initialize Zep client
-    zep = AsyncZep(api_key=os.getenv("ZEP_API_KEY"), base_url="https://api.getzep.com/api/v2")
+    api_key = os.getenv("ZEP_API_KEY")
+    if not api_key:
+        raise ValueError("Set ZEP_API_KEY in the environment or in a .env file.")
+
+    # Cloud is the default. Set ZEP_API_URL only for self-hosted / BYOC (deployment root, no /api/v2).
+    api_url = os.getenv("ZEP_API_URL")
+    if api_url:
+        os.environ["ZEP_API_URL"] = api_url.rstrip("/").removesuffix("/api/v2")
+
+    zep = AsyncZep(api_key=api_key)
 
     # Download JSON data
     url = "https://raw.githubusercontent.com/snap-research/locomo/refs/heads/main/data/locomo10.json"
